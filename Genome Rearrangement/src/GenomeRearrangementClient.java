@@ -14,9 +14,9 @@ public class GenomeRearrangementClient {
 		
 		//GenomeRearrangement genomeRearrangement = new GenomeRearrangement(10);
 		//System.out.println(genomeRearrangement.getGenomicSequence());
-		//System.out.println("Number of flipes was " + genomeRearrangement.getNumberOfFlipsToGenerateGenomicSequence());
+		//System.out.println("Number of flips was " + genomeRearrangement.getNumberOfFlipsToGenerateGenomicSequence());
 		
-		Integer[] testSequence = {0,1,2,7,6,5,8,4,3,9};
+		Integer[] testSequence = {0,2,1,3,4,5,8,7,6,9};
 		List<Integer> testGenomicSequence = Arrays.asList(testSequence);
 		GenomeRearrangement.getNumberOfFlipsToRevertToIdentitySequence(testGenomicSequence);
 		

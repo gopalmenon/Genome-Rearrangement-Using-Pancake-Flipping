@@ -13,6 +13,7 @@ public class GenomeRearrangement {
 	public static final String GENOMIC_SEQUENCE_BOUNDARIES = "GENOMIC_SEQUENCE_BOUNDARIES";
 	public static final String DESCENDING_STRIP = "D";
 	public static final String ASCENDING_STRIP = "A";
+	public static final String STRIP_BOUNDARY = "|";
 	
 	private Random randomNumberGenerator;
 	private int numberOfTimesToFlip;
@@ -162,10 +163,15 @@ public class GenomeRearrangement {
 				genomicSequenceElementDirections[index] = DESCENDING_STRIP;
 			} else if (index == 1) {
 				genomicSequenceElementDirections[index - 1] = ASCENDING_STRIP;
+				genomicSequenceElementBoundaries[index - 1] = STRIP_BOUNDARY;
 			} else if (index == genomicSequenceLength - 1) {
 				genomicSequenceElementDirections[index] = ASCENDING_STRIP;
-			} else if (genomicSequenceElementDirections[index - 1] == null) {
-				genomicSequenceElementDirections[index - 1] = DESCENDING_STRIP;
+				genomicSequenceElementBoundaries[index - 1] = STRIP_BOUNDARY;
+			} else {
+				if (genomicSequenceElementDirections[index - 1] == null) {
+					genomicSequenceElementDirections[index - 1] = DESCENDING_STRIP;
+				}
+				genomicSequenceElementBoundaries[index - 1] = STRIP_BOUNDARY;
 			}
 		}
 		
