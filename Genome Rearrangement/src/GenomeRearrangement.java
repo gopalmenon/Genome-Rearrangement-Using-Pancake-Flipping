@@ -1,18 +1,25 @@
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 
 public class GenomeRearrangement {
 	
 	public static final int MAXIMUM_NUMBER_OF_TIMES_TO_FLIP = 1000;
+	public static final String GENOMIC_SEQUENCE_DIRECTIONS = "GENOMIC_SEQUENCE_DIRECTIONS";
+	public static final String GENOMIC_SEQUENCE_BOUNDARIES = "GENOMIC_SEQUENCE_BOUNDARIES";
+	public static final String DESCENDING_STRIP = "D";
+	public static final String ASCENDING_STRIP = "A";
 	
 	private Random randomNumberGenerator;
 	private int numberOfTimesToFlip;
 	private int sequenceLength;
-	private List<Integer> genomicSequence;
 	private List<Integer> identityGenomicSequence;
+	private List<Integer> genomicSequence;
+	private int numberOfFlipsToRevertToIdentity;
 	
 	/**
 	 * Constructor
@@ -24,6 +31,7 @@ public class GenomeRearrangement {
 		this.sequenceLength = sequenceLength;
 		this.identityGenomicSequence = getOrderedGenomicSequence(this.sequenceLength);
 		this.genomicSequence = generateGenomicSequence(this.sequenceLength);
+		revertToIdentitySequence();
 	}
 	
 	/**
@@ -40,6 +48,33 @@ public class GenomeRearrangement {
 		return this.numberOfTimesToFlip;
 	}
 	
+	public int getnumberOfFlipsToRevertToIdentity() {
+		return this.numberOfFlipsToRevertToIdentity;
+	}
+	
+	/**
+	 * @return Number of flips for the class variable genomic sequence to revert to Identity Sequence
+	 */
+	private void revertToIdentitySequence() {
+		
+		this.numberOfFlipsToRevertToIdentity = getNumberOfFlipsToRevertToIdentitySequence(this.genomicSequence);
+		
+	}
+	
+	/**
+	 * @param genomicSequence
+	 * @return Number of flips for the input genomic sequence to revert to Identity Sequence
+	 */
+	public static int getNumberOfFlipsToRevertToIdentitySequence(List<Integer> genomicSequence) {
+		
+		markGenomicSequenceBreakpoints(genomicSequence);
+		
+		
+		
+		return 0;
+		
+	}
+
 	/**
 	 * @param sequenceLength
 	 * @return a Genomic Sequence of the given length formed by flipping a random section of the sequence multiple times 
@@ -107,4 +142,36 @@ public class GenomeRearrangement {
 		
 	}
 	
+	/**
+	 * Mark the boundaries in the genomic sequence
+	 */
+	private static Map<String, String[]> markGenomicSequenceBreakpoints(List<Integer> genomicSequence) {
+		
+		Map<String, String[]> genomicSequenceBreakpoints = new HashMap<String, String[]>();
+		int genomicSequenceLength = genomicSequence.size();
+		String[] genomicSequenceElementDirections = new String[genomicSequenceLength];
+		String[] genomicSequenceElementBoundaries = new String[genomicSequenceLength];
+		
+		//Start from the beginning of the sequence and mark the breakpoints
+		for (int index = 1; index < genomicSequenceLength; ++index) {
+			if (genomicSequence.get(index - 1).intValue() == genomicSequence.get(index).intValue() - 1) {
+				genomicSequenceElementDirections[index - 1] = ASCENDING_STRIP;
+				genomicSequenceElementDirections[index] = ASCENDING_STRIP;
+			} else if (genomicSequence.get(index - 1).intValue() == genomicSequence.get(index).intValue() + 1) {
+				genomicSequenceElementDirections[index - 1] = DESCENDING_STRIP;
+				genomicSequenceElementDirections[index] = DESCENDING_STRIP;
+			} else if (index == 1) {
+				genomicSequenceElementDirections[index - 1] = ASCENDING_STRIP;
+			} else if (index == genomicSequenceLength - 1) {
+				genomicSequenceElementDirections[index] = ASCENDING_STRIP;
+			} else if (genomicSequenceElementDirections[index - 1] == null) {
+				genomicSequenceElementDirections[index - 1] = DESCENDING_STRIP;
+			}
+		}
+		
+		genomicSequenceBreakpoints.put(GENOMIC_SEQUENCE_DIRECTIONS, genomicSequenceElementDirections);
+		genomicSequenceBreakpoints.put(GENOMIC_SEQUENCE_BOUNDARIES, genomicSequenceElementBoundaries);
+		return genomicSequenceBreakpoints;
+		
+	}
 }
