@@ -68,11 +68,27 @@ public class GenomeRearrangement {
 	 */
 	public static int getNumberOfFlipsToRevertToIdentitySequence(List<Integer> genomicSequence) {
 		
-		markGenomicSequenceBreakpoints(genomicSequence);
+		Map<String, String[]> genomicSequenceBreakpoints = markGenomicSequenceBreakpoints(genomicSequence);
 		
+		int numberOfFlips = 0;
+		//Repeat while there are still breakpoints
+		while (hasGenomicSequenceBreakpoints(genomicSequenceBreakpoints)) {
+			
+			
+			if (hasDecreasingStrip(genomicSequenceBreakpoints)) {
+				//If there is a decreasing strip, flip the one that maximizes the reduction in breakpoints
+				flipStripToMinimizeBreakpoints(genomicSequence, genomicSequenceBreakpoints);
+			} else {
+				//Since there is no decreasing strip, flip an ascending strip
+				flipAnAscendingStrip(genomicSequence, genomicSequenceBreakpoints);
+			}
+			
+			//Increment the flip count
+			++numberOfFlips;
+			
+		}
 		
-		
-		return 0;
+		return numberOfFlips;
 		
 	}
 
@@ -117,7 +133,7 @@ public class GenomeRearrangement {
 	 * @param flipEnd
 	 * @return Flip the part of the sequence from flipStart to flipEnd
 	 */
-	private List<Integer> oneFlip(List<Integer> genomicSequence, int flipStart, int flipEnd) {
+	private static List<Integer> oneFlip(List<Integer> genomicSequence, int flipStart, int flipEnd) {
 		
 		if (flipStart == flipEnd) {
 			return genomicSequence;
@@ -144,7 +160,7 @@ public class GenomeRearrangement {
 	}
 	
 	/**
-	 * Mark the boundaries in the genomic sequence
+	 * Mark the strip directions and boundaries in the genomic sequence
 	 */
 	private static Map<String, String[]> markGenomicSequenceBreakpoints(List<Integer> genomicSequence) {
 		
@@ -155,29 +171,158 @@ public class GenomeRearrangement {
 		
 		//Start from the beginning of the sequence and mark the breakpoints
 		for (int index = 1; index < genomicSequenceLength; ++index) {
+			//If previous is one less than current, mark both as ascending
 			if (genomicSequence.get(index - 1).intValue() == genomicSequence.get(index).intValue() - 1) {
 				genomicSequenceElementDirections[index - 1] = ASCENDING_STRIP;
 				genomicSequenceElementDirections[index] = ASCENDING_STRIP;
+			//If previous is one greater than current, mark both as descending
 			} else if (genomicSequence.get(index - 1).intValue() == genomicSequence.get(index).intValue() + 1) {
 				genomicSequenceElementDirections[index - 1] = DESCENDING_STRIP;
 				genomicSequenceElementDirections[index] = DESCENDING_STRIP;
+			//There has to be a boundary here. If at second element, mark first as ascending
 			} else if (index == 1) {
 				genomicSequenceElementDirections[index - 1] = ASCENDING_STRIP;
 				genomicSequenceElementBoundaries[index - 1] = STRIP_BOUNDARY;
+			//There has to be a boundary here. If at last element, mark first as ascending
 			} else if (index == genomicSequenceLength - 1) {
 				genomicSequenceElementDirections[index] = ASCENDING_STRIP;
 				genomicSequenceElementBoundaries[index - 1] = STRIP_BOUNDARY;
 			} else {
+				//There has to be a boundary here.
+				genomicSequenceElementBoundaries[index - 1] = STRIP_BOUNDARY;
+				//If previous element is not already marked, then it is a solitary element and needs to be marked as descending 
 				if (genomicSequenceElementDirections[index - 1] == null) {
 					genomicSequenceElementDirections[index - 1] = DESCENDING_STRIP;
 				}
-				genomicSequenceElementBoundaries[index - 1] = STRIP_BOUNDARY;
 			}
 		}
 		
 		genomicSequenceBreakpoints.put(GENOMIC_SEQUENCE_DIRECTIONS, genomicSequenceElementDirections);
 		genomicSequenceBreakpoints.put(GENOMIC_SEQUENCE_BOUNDARIES, genomicSequenceElementBoundaries);
 		return genomicSequenceBreakpoints;
+		
+	}
+	
+	/**
+	 * @param genomicSequenceBreakpoints
+	 * @return true if genomic sequence has breakpoints
+	 */
+	private static boolean hasGenomicSequenceBreakpoints(Map<String, String[]> genomicSequenceBreakpoints) {
+		
+		boolean hasGenomicSequenceBreakpoints = false;
+		String[] breakpoints = genomicSequenceBreakpoints.get(GENOMIC_SEQUENCE_BOUNDARIES);
+		for (String genomicElement : breakpoints) {
+			if (genomicElement != null) {
+				hasGenomicSequenceBreakpoints = true;
+				break;
+			}
+		}
+		return hasGenomicSequenceBreakpoints;
+		
+	}
+	
+	
+	/**
+	 * @param genomicSequenceBreakpoints
+	 * @return true if genomic sequence has a decreasing strip
+	 */
+	private static boolean hasDecreasingStrip(Map<String, String[]> genomicSequenceBreakpoints) {
+		
+		boolean hasDecreasingStrip = false;
+		String[] sequenceDirections = genomicSequenceBreakpoints.get(GENOMIC_SEQUENCE_DIRECTIONS);
+		for (String genomicElement : sequenceDirections) {
+			if (DESCENDING_STRIP.equals(genomicElement)) {
+				hasDecreasingStrip = true;
+				break;
+			}
+		}
+		return hasDecreasingStrip;
+	}
+	
+	private static void flipAnAscendingStrip(List<Integer> genomicSequence, Map<String, String[]> genomicSequenceBreakpoints) {
+		
+		//Find start and end indexes of the first ascending strip
+		String[] breakpoints = genomicSequenceBreakpoints.get(GENOMIC_SEQUENCE_BOUNDARIES);
+		int numberOfGenomicElements = breakpoints.length, flipStart = 0, flipEnd = numberOfGenomicElements - 1;
+		for (int index = 0; index < numberOfGenomicElements; ++index) {
+			if (breakpoints[index] != null) {
+				if (flipStart == 0) {
+					flipStart = index + 1;
+				} else if (flipEnd == numberOfGenomicElements - 1) {
+					flipEnd = index;
+					break;
+				}
+			}
+		}
+		
+		//Flip the ascending strip
+		oneFlip(genomicSequence, flipStart, flipEnd);
+	}
+	
+	/**
+	 * @param genomicSequence
+	 * @param genomicSequenceBreakpoint
+	 * Flip the strip that will result in reducing the number of breakpoints by the largest amount. Among all the decreasing strips, choose the one 
+	 * containing the smallest element. That will be one end of the strip to flip. The other end will be the number one smaller than it.
+	 * 
+	 */
+	private static void flipStripToMinimizeBreakpoints(List<Integer> genomicSequence, Map<String, String[]> genomicSequenceBreakpoints) {
+		
+		String[] sequenceDirections = genomicSequenceBreakpoints.get(GENOMIC_SEQUENCE_DIRECTIONS);
+		
+		//Find the descending strip with the smallest element. That element will be at the end of the strip. 
+		int smallestElementIndex = 0, smallestElement = Integer.MAX_VALUE, genomicSequenceLength = genomicSequence.size();
+		for (int index = 0; index < genomicSequenceLength; ++index) {
+			if (DESCENDING_STRIP.equals(sequenceDirections)) {
+				if (genomicSequence.get(index).intValue() < smallestElement) {
+					smallestElement = genomicSequence.get(index).intValue();
+					smallestElementIndex = index;
+				}
+			}
+		}
+		
+		//Then find the element that is one less than the smallest element found above
+		int nextSmallestElementIndex = 0;
+		for (int index = 0; index < genomicSequenceLength; ++index) {
+			if (genomicSequence.get(index).intValue() == smallestElement - 1) {
+				nextSmallestElementIndex = index;
+				break;
+			}
+		}
+		
+		int flipStart = 0, flipEnd = 0;
+		//If next smallest element was not found, flip the descending sequence ending in the smallest element
+		if (nextSmallestElementIndex == 0) {
+			flipStart = getStartOfDescendingStrip(smallestElementIndex, genomicSequenceBreakpoints);
+			flipEnd = smallestElementIndex;
+		} else if (nextSmallestElementIndex < smallestElementIndex) {
+			flipStart = nextSmallestElementIndex + 1;
+			flipEnd = smallestElementIndex;
+		} else {
+			flipStart = smallestElementIndex + 1;
+			flipEnd = nextSmallestElementIndex;
+		}
+		
+		oneFlip(genomicSequence, flipStart, flipEnd);
+		
+	}
+	
+	/**
+	 * @param smallestElementIndex
+	 * @param genomicSequenceBreakpoints
+	 * @return starting index of the descending strip
+	 */
+	private static int getStartOfDescendingStrip(int smallestElementIndex, Map<String, String[]> genomicSequenceBreakpoints) {
+		
+		String[] breakpoints = genomicSequenceBreakpoints.get(GENOMIC_SEQUENCE_BOUNDARIES);
+		int startOfDescendingStrip = 0;
+		for (int index = smallestElementIndex; index >= 0; --index) {
+			if (breakpoints[index] != null) {
+				startOfDescendingStrip = index + 1;
+				break;
+			}
+		}
+		return startOfDescendingStrip;
 		
 	}
 }
