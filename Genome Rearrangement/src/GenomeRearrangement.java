@@ -68,6 +68,9 @@ public class GenomeRearrangement {
 	 */
 	public static int getNumberOfFlipsToRevertToIdentitySequence(List<Integer> genomicSequence) {
 		
+		//Pad the genomic sequence by 0 on the left and one more than maximum value on the right
+		genomicSequence = getPaddedGenomicSequence(genomicSequence);
+		
 		Map<String, String[]> genomicSequenceBreakpoints = markGenomicSequenceBreakpoints(genomicSequence);
 		
 		int numberOfFlips = 0;
@@ -91,6 +94,33 @@ public class GenomeRearrangement {
 		}
 		
 		return numberOfFlips;
+		
+	}
+	
+	/**
+	 * @param genomicSequence
+	 * @return padded genomic sequence by 0 on the left and one more than maximum value on the right
+	 */
+	private static List<Integer> getPaddedGenomicSequence(List<Integer> genomicSequence) {
+		
+		int originalGenomicSequenceLength = genomicSequence.size();
+		List<Integer> paddedGenomicSequence = new ArrayList<Integer>(originalGenomicSequenceLength + 2);
+		int maximumSequenceElement = 0;
+		for (int index = 0; index < originalGenomicSequenceLength; ++index) {
+			
+			assert genomicSequence.get(index).intValue() != 0 : "Genomic sequence cannot contain zero.";
+			
+			if (genomicSequence.get(index).intValue() > maximumSequenceElement) {
+				maximumSequenceElement = genomicSequence.get(index).intValue();
+			}
+			
+		}
+		
+		paddedGenomicSequence.add(Integer.valueOf(0));
+		paddedGenomicSequence.addAll(genomicSequence);
+		paddedGenomicSequence.add(Integer.valueOf(maximumSequenceElement + 1));
+		
+		return paddedGenomicSequence;
 		
 	}
 
@@ -117,7 +147,8 @@ public class GenomeRearrangement {
 	
 	/**
 	 * @param sequenceLength
-	 * @return an ordered genomic sequence starting at 1 and ending at sequenceLength
+	 * @return an ordered genomic sequence starting at 1 and ending at sequenceLength. The sequence will be padded on both sides by 0 and 
+	 * a number one larger than the sequence length.
 	 */
 	private List<Integer> getOrderedGenomicSequence(int sequenceLength) {
 		
