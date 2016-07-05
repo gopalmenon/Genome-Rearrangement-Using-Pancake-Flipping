@@ -72,18 +72,20 @@ public class GenomeRearrangement {
 		
 		int numberOfFlips = 0;
 		//Repeat while there are still breakpoints
+		System.out.println(genomicSequence);
 		while (hasGenomicSequenceBreakpoints(genomicSequenceBreakpoints)) {
 			
 			
 			if (hasDecreasingStrip(genomicSequenceBreakpoints)) {
 				//If there is a decreasing strip, flip the one that maximizes the reduction in breakpoints
-				flipStripToMinimizeBreakpoints(genomicSequence, genomicSequenceBreakpoints);
+				genomicSequenceBreakpoints = flipStripToMinimizeBreakpoints(genomicSequence, genomicSequenceBreakpoints);
 			} else {
 				//Since there is no decreasing strip, flip an ascending strip
-				flipAnAscendingStrip(genomicSequence, genomicSequenceBreakpoints);
+				genomicSequenceBreakpoints = flipAnAscendingStrip(genomicSequence, genomicSequenceBreakpoints);
 			}
 			
 			//Increment the flip count
+			System.out.println(genomicSequence);
 			++numberOfFlips;
 			
 		}
@@ -106,7 +108,7 @@ public class GenomeRearrangement {
 		for (int flipCounter = 0; flipCounter < this.numberOfTimesToFlip; ++flipCounter) {
 			flipStart = this.randomNumberGenerator.nextInt(sequenceLength);
 			flipEnd = this.randomNumberGenerator.nextInt(sequenceLength);
-			genomicSequence = oneFlip(genomicSequence, flipStart, flipEnd);
+			oneFlip(genomicSequence, flipStart, flipEnd, null);
 		}	
 		
 		return genomicSequence;
@@ -133,10 +135,10 @@ public class GenomeRearrangement {
 	 * @param flipEnd
 	 * @return Flip the part of the sequence from flipStart to flipEnd
 	 */
-	private static List<Integer> oneFlip(List<Integer> genomicSequence, int flipStart, int flipEnd) {
+	private static Map<String, String[]> oneFlip(List<Integer> genomicSequence, int flipStart, int flipEnd, Map<String, String[]> genomicSequenceBreakpoints) {
 		
 		if (flipStart == flipEnd) {
-			return genomicSequence;
+			return genomicSequenceBreakpoints;
 		}
 		
 		int startIndex = flipStart < flipEnd ? flipStart : flipEnd;
@@ -155,7 +157,11 @@ public class GenomeRearrangement {
 			genomicSequence.set(startIndex++, subSequenceToFlip.get(counter));
 		}
 		
-		return genomicSequence;
+		if (genomicSequenceBreakpoints != null) {
+			return markGenomicSequenceBreakpoints(genomicSequence);
+		} else {
+			return null;
+		}
 		
 	}
 	
@@ -239,24 +245,27 @@ public class GenomeRearrangement {
 		return hasDecreasingStrip;
 	}
 	
-	private static void flipAnAscendingStrip(List<Integer> genomicSequence, Map<String, String[]> genomicSequenceBreakpoints) {
+	private static Map<String, String[]>  flipAnAscendingStrip(List<Integer> genomicSequence, Map<String, String[]> genomicSequenceBreakpoints) {
 		
 		//Find start and end indexes of the first ascending strip
 		String[] breakpoints = genomicSequenceBreakpoints.get(GENOMIC_SEQUENCE_BOUNDARIES);
 		int numberOfGenomicElements = breakpoints.length, flipStart = 0, flipEnd = numberOfGenomicElements - 1;
+		boolean flipStartFound = false, flipEndFound = false;
 		for (int index = 0; index < numberOfGenomicElements; ++index) {
 			if (breakpoints[index] != null) {
-				if (flipStart == 0) {
+				if (!flipStartFound) {
 					flipStart = index + 1;
-				} else if (flipEnd == numberOfGenomicElements - 1) {
+					flipStartFound = true;
+				} else if (!flipEndFound) {
 					flipEnd = index;
+					flipEndFound = true;
 					break;
 				}
 			}
 		}
 		
 		//Flip the ascending strip
-		oneFlip(genomicSequence, flipStart, flipEnd);
+		return oneFlip(genomicSequence, flipStart, flipEnd, genomicSequenceBreakpoints);
 	}
 	
 	/**
@@ -266,14 +275,14 @@ public class GenomeRearrangement {
 	 * containing the smallest element. That will be one end of the strip to flip. The other end will be the number one smaller than it.
 	 * 
 	 */
-	private static void flipStripToMinimizeBreakpoints(List<Integer> genomicSequence, Map<String, String[]> genomicSequenceBreakpoints) {
+	private static Map<String, String[]> flipStripToMinimizeBreakpoints(List<Integer> genomicSequence, Map<String, String[]> genomicSequenceBreakpoints) {
 		
 		String[] sequenceDirections = genomicSequenceBreakpoints.get(GENOMIC_SEQUENCE_DIRECTIONS);
 		
 		//Find the descending strip with the smallest element. That element will be at the end of the strip. 
 		int smallestElementIndex = 0, smallestElement = Integer.MAX_VALUE, genomicSequenceLength = genomicSequence.size();
 		for (int index = 0; index < genomicSequenceLength; ++index) {
-			if (DESCENDING_STRIP.equals(sequenceDirections)) {
+			if (DESCENDING_STRIP.equals(sequenceDirections[index])) {
 				if (genomicSequence.get(index).intValue() < smallestElement) {
 					smallestElement = genomicSequence.get(index).intValue();
 					smallestElementIndex = index;
@@ -283,16 +292,18 @@ public class GenomeRearrangement {
 		
 		//Then find the element that is one less than the smallest element found above
 		int nextSmallestElementIndex = 0;
+		boolean nextSmallestElementIndexFound = false;
 		for (int index = 0; index < genomicSequenceLength; ++index) {
 			if (genomicSequence.get(index).intValue() == smallestElement - 1) {
 				nextSmallestElementIndex = index;
+				nextSmallestElementIndexFound = true;
 				break;
 			}
 		}
 		
 		int flipStart = 0, flipEnd = 0;
 		//If next smallest element was not found, flip the descending sequence ending in the smallest element
-		if (nextSmallestElementIndex == 0) {
+		if (nextSmallestElementIndex == 0 && !nextSmallestElementIndexFound) {
 			flipStart = getStartOfDescendingStrip(smallestElementIndex, genomicSequenceBreakpoints);
 			flipEnd = smallestElementIndex;
 		} else if (nextSmallestElementIndex < smallestElementIndex) {
@@ -303,7 +314,7 @@ public class GenomeRearrangement {
 			flipEnd = nextSmallestElementIndex;
 		}
 		
-		oneFlip(genomicSequence, flipStart, flipEnd);
+		return oneFlip(genomicSequence, flipStart, flipEnd, genomicSequenceBreakpoints);
 		
 	}
 	
@@ -316,12 +327,13 @@ public class GenomeRearrangement {
 		
 		String[] breakpoints = genomicSequenceBreakpoints.get(GENOMIC_SEQUENCE_BOUNDARIES);
 		int startOfDescendingStrip = 0;
-		for (int index = smallestElementIndex; index >= 0; --index) {
+		for (int index = smallestElementIndex - 1; index >= 0; --index) {
 			if (breakpoints[index] != null) {
 				startOfDescendingStrip = index + 1;
 				break;
 			}
 		}
+		
 		return startOfDescendingStrip;
 		
 	}
