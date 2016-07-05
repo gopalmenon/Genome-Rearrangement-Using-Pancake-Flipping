@@ -8,7 +8,7 @@ import java.util.Random;
 
 public class GenomeRearrangement {
 	
-	public static final int MAXIMUM_NUMBER_OF_TIMES_TO_FLIP = 1000;
+	public static final int MAXIMUM_NUMBER_OF_TIMES_TO_FLIP = 10000;
 	public static final String GENOMIC_SEQUENCE_DIRECTIONS = "GENOMIC_SEQUENCE_DIRECTIONS";
 	public static final String GENOMIC_SEQUENCE_BOUNDARIES = "GENOMIC_SEQUENCE_BOUNDARIES";
 	public static final String DESCENDING_STRIP = "D";
