@@ -25,9 +25,9 @@ public class GenomeRearrangement {
 	/**
 	 * Constructor
 	 */
-	public GenomeRearrangement(int sequenceLength) {
+	public GenomeRearrangement(int sequenceLength, Random randomNumberGenerator) {
 		
-		this.randomNumberGenerator = new Random();
+		this.randomNumberGenerator = randomNumberGenerator;
 		this.numberOfTimesToFlip = randomNumberGenerator.nextInt(MAXIMUM_NUMBER_OF_TIMES_TO_FLIP);
 		this.sequenceLength = sequenceLength;
 		this.identityGenomicSequence = getOrderedGenomicSequence(this.sequenceLength);
@@ -75,7 +75,6 @@ public class GenomeRearrangement {
 		
 		int numberOfFlips = 0;
 		//Repeat while there are still breakpoints
-		System.out.println(genomicSequence);
 		while (hasGenomicSequenceBreakpoints(genomicSequenceBreakpoints)) {
 			
 			
@@ -88,7 +87,6 @@ public class GenomeRearrangement {
 			}
 			
 			//Increment the flip count
-			System.out.println(genomicSequence);
 			++numberOfFlips;
 			
 		}

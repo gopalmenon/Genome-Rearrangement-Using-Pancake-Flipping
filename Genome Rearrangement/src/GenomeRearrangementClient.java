@@ -1,30 +1,34 @@
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 
 public class GenomeRearrangementClient {
+	
+	public static final int SEQUENCE_LENGTH = 10000;
+	public static final int NUMBER_OF_ITERATIONS = 1000;
 
 	public static void main(String[] args) {
 		
 		GenomeRearrangementClient genomeRearrangementClient = new GenomeRearrangementClient();
-		genomeRearrangementClient.restoreToIdentitySequence();
+		genomeRearrangementClient.findIterationsRequired();
 	}
 	
-	public void restoreToIdentitySequence() {
+	public void findIterationsRequired() {
 		
-		GenomeRearrangement genomeRearrangement = new GenomeRearrangement(30);
-		System.out.println(genomeRearrangement.getGenomicSequence());
-		System.out.println("Number of flips was " + genomeRearrangement.getNumberOfFlipsToGenerateGenomicSequence());
+		Random randomNumberGenerator = new Random();
+		List<Integer> flipsToGenerateSequence = new ArrayList<Integer>(), flipsToRevertToIdentity = new ArrayList<Integer>();
 		
-		//Integer[] testSequence = {1,5,6, 7,2,3,4,8,9};
-		//4,3,7,6,5,8,1,2,9
-		//1,2,7,6,5,8,4,3,9
-		//8,2,7,6,5,1,4,3,9
-		//8,7,6,5,4,3,2,1,9
-		//1,5,6,7,2,3,4,8,9
-		//10, 1, 8, 9, 5, 6, 2, 3, 7, 4
-		//List<Integer> testGenomicSequence = Arrays.asList(testSequence);
-		//System.out.println("Number of flips is " +GenomeRearrangement.getNumberOfFlipsToRevertToIdentitySequence(testGenomicSequence));
+		//Save the counts
+		for (int counter = 0; counter < NUMBER_OF_ITERATIONS; ++counter) {
+			GenomeRearrangement genomeRearrangement = new GenomeRearrangement(SEQUENCE_LENGTH, randomNumberGenerator);
+			flipsToGenerateSequence.add(genomeRearrangement.getNumberOfFlipsToGenerateGenomicSequence());
+			flipsToRevertToIdentity.add(genomeRearrangement.getnumberOfFlipsToRevertToIdentity());
+		}
+		
+		//Show the counts
+		System.out.println("Number of flips to generate sequence: " + flipsToGenerateSequence);
+		System.out.println("Number of flips to revert to identity:  " + flipsToRevertToIdentity);
 		
 	}
 }
