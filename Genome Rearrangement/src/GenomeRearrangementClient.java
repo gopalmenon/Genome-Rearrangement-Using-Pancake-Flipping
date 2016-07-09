@@ -5,8 +5,8 @@ import java.util.Random;
 
 public class GenomeRearrangementClient {
 	
-	public static final int SEQUENCE_LENGTH = 10000;
-	public static final int NUMBER_OF_ITERATIONS = 1000;
+	public static final int SEQUENCE_LENGTH = 100000;
+	public static final int NUMBER_OF_ITERATIONS = 100;
 
 	public static void main(String[] args) {
 		
